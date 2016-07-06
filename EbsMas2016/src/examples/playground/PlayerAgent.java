@@ -33,6 +33,7 @@ import it.unibo.tucson.jade.service.TucsonService;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.ServiceException;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.core.behaviours.TickerBehaviour;
 import jade.core.behaviours.WakerBehaviour;
@@ -63,7 +64,7 @@ public class PlayerAgent extends Agent {
         	
         	this.producer = new KafkaProducer<String, String>(producer_props);
 			
-			PlayerAgent.this.addBehaviour(new ObserveGameBehaviour(PlayerAgent.this, 1000));
+			PlayerAgent.this.addBehaviour(new ObserveGameBehaviour());
 			PlayerAgent.this.log("TEAMMATES: [" + String.join(", ", PlayerAgent.this.teammates) + "]");
 			PlayerAgent.this.log("OPPONENTS: [" + String.join(", ", PlayerAgent.this.opponents) + "]");
 		}
@@ -253,7 +254,7 @@ public class PlayerAgent extends Agent {
 					
 				} else {
 					PlayerAgent.this.log("Oh...ok, then I will just watch the game...");
-					PlayerAgent.this.addBehaviour(new ObserveGameBehaviour(PlayerAgent.this, 1000));
+					PlayerAgent.this.addBehaviour(new ObserveGameBehaviour());
 				}
 
 		        this.stop();
@@ -410,25 +411,21 @@ public class PlayerAgent extends Agent {
 		
 	}
 	
-	private class ObserveGameBehaviour extends TickerBehaviour {
+	private class ObserveGameBehaviour extends CyclicBehaviour {
 		
 		private static final long serialVersionUID = 1L;
 		
 		private KafkaConsumerAssistant kca;
-		private PlayerAgent myAgent;
 		
-		public ObserveGameBehaviour(PlayerAgent a, long period) {
-			super(a, period);
+		public ObserveGameBehaviour() {
 			
-			myAgent = a;
-			
-			kca = new KafkaConsumerAssistant(this, myAgent.getAID().getName());
-			kca.subscribe(myAgent.playgroundTopic);
+			kca = new KafkaConsumerAssistant(this, PlayerAgent.this.getAID().getName());
+			kca.subscribe(PlayerAgent.this.playgroundTopic);
 		}
 		
 		@Override
-		public void onTick() {
-        	ConsumerRecords<String, String> records = kca.consume(1000);
+		public void action() {
+        	ConsumerRecords<String, String> records = kca.consume(Long.MAX_VALUE);
         	if (records.count() != 0){
         		for (ConsumerRecord<String, String> record : records) {
         			PlayerAgent.this.log(record.value());
