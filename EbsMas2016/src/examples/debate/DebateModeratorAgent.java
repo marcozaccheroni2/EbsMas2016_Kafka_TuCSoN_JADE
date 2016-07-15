@@ -40,7 +40,7 @@ public class DebateModeratorAgent extends Agent {
             String rndString = salt.toString();
 	    	String msg = "{\"type\":\"new-argument\", \"argument\":\"" + rndString + "\", \"time\":\"" + timeStamp + "\"}";
 	    	DebateModeratorAgent.this.producer.send(new ProducerRecord<String, String>(topicName, msg));
-	    	DebateModeratorAgent.this.log("NEW ARGUMENT! " + msg);
+	    	DebateModeratorAgent.this.log("A man propose an argument: " + rndString);
 		}
 		
 	}
@@ -81,7 +81,7 @@ public class DebateModeratorAgent extends Agent {
     	
     	this.producer = new KafkaProducer<>(properties);
         
-        this.addBehaviour(new ChooseArgumentBehaviour(this, 30*1000));
+        this.addBehaviour(new ChooseArgumentBehaviour(this, 3*1000));
         
     }
 	

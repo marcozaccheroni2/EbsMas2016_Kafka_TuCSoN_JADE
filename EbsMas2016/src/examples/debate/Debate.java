@@ -24,17 +24,13 @@ public class Debate {
 		AgentContainer mainContainer = rt.createMainContainer(profile);
 		
 		try {
-			DebateModeratorAgent phil = new DebateModeratorAgent();
-			mainContainer.acceptNewAgent("Phil", phil).start();
+			DebateModeratorAgent jaquen = new DebateModeratorAgent();
+			mainContainer.acceptNewAgent("Jaqen", jaquen).start();
 			
-			try {
-			    Thread.sleep(5000);
-			} catch(InterruptedException ex) {
-			    Thread.currentThread().interrupt();
-			}
+			wait(1.0);
 			
-			DebateParticipantAgent bob = new DebateParticipantAgent();
-			mainContainer.acceptNewAgent("Bob", bob).start();
+			DebateParticipantAgent ned = new DebateParticipantAgent();
+			mainContainer.acceptNewAgent("Ned", ned).start();
 			
 			wait(1.5);
 			

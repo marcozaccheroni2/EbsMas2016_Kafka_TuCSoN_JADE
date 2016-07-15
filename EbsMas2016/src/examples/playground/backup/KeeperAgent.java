@@ -1,4 +1,4 @@
-package examples.playground;
+package examples.playground.backup;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -45,7 +45,7 @@ public class KeeperAgent extends Agent {
 
 	private void log(final String msg) {
         System.err.println("[" + this.getLocalName() + "]: " + msg);
-        this.gui.keeperLog(this.getLocalName(), msg);
+        this.debug.log(this.getLocalName(), msg);
     }
 	
 	/** */
@@ -68,14 +68,14 @@ public class KeeperAgent extends Agent {
     
     private final String playgroundTopic = "playgroundTopic";
     
-    private PlaygroundGUI gui;
+    private DebugGUI debug;
     private int players_per_team;
     
     private int team_white_score = 0;
     private int team_black_score = 0;
     
-    public KeeperAgent(PlaygroundGUI gui, int players_per_team) {
-		this.gui = gui;
+    public KeeperAgent(DebugGUI debug, int players_per_team) {
+		this.debug = debug;
 		this.players_per_team = players_per_team;
 	}
     
@@ -198,7 +198,9 @@ public class KeeperAgent extends Agent {
 								KeeperAgent.this.team_black_score += 2;
 							}
 							
-							KeeperAgent.this.gui.updateScore(KeeperAgent.this.team_white_score, KeeperAgent.this.team_black_score);;
+							KeeperAgent.this.log("WHITE " + KeeperAgent.this.team_white_score +
+									" - " +
+									"BLACK " + KeeperAgent.this.team_black_score);
 							
 							break;
 						

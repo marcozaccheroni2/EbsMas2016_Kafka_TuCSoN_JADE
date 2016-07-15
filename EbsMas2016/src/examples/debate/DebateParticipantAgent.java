@@ -50,16 +50,16 @@ public class DebateParticipantAgent extends Agent {
 		
         @Override
 		public void action() {
-        	DebateParticipantAgent.this.log("I'm going to consume with a looooooong timeout...");
+        	DebateParticipantAgent.this.log("[PayAttentionToModeratorBehaviour]");
         	ConsumerRecords<String, String> records = k4j_bridge.consume(Long.MAX_VALUE);
         	if (records.count() != 0){
-        		DebateParticipantAgent.this.log("Oh, there is something...");
         		for (ConsumerRecord<String, String> record : records) {
         			try {
 						JsonNode msg = mapper.readTree(record.value());
 						
 						if ("new-argument".equals(msg.get("type").asText())) {
 							currentArgument = msg.get("argument").asText();
+							DebateParticipantAgent.this.log("[NEW ARGUMENT] " + currentArgument);
 						}
 						
 					} catch (JsonProcessingException e) {
@@ -71,8 +71,6 @@ public class DebateParticipantAgent extends Agent {
 					}
         		}
         		
-        	} else {
-        		DebateParticipantAgent.this.log("Nothing found...");
         	}
 		}
 		
@@ -84,7 +82,7 @@ public class DebateParticipantAgent extends Agent {
 		
 		private String[] questions = {"What do you think about it?", "What is your opinion?", "And you?"};
 		private String[] answers = {"I agree", "I disagree", "Absolutely", "Winter is coming"};
-		private String[] opinions = {"I like %s.", "%s is total bullshit!", "A participant has no opinion about %s."};
+		private String[] opinions = {"I know nothing about %s.", "%s is total bullshit!", "A participant has no opinion about %s."};
 		
 		private final MessageTemplate debateQuestionTemplate = MessageTemplate.and(
 				MessageTemplate.MatchOntology("Debate-question"),
@@ -97,7 +95,7 @@ public class DebateParticipantAgent extends Agent {
 		@Override
 		public void onTick() {
 			
-			DebateParticipantAgent.this.log(".");
+			DebateParticipantAgent.this.log("[DebateBehaviour]");
 			
 			if ("".equals(currentArgument)) return;
 			
@@ -112,7 +110,7 @@ public class DebateParticipantAgent extends Agent {
 				
 				this.myAgent.send(reply);
 				
-				DebateParticipantAgent.this.log("[ANSWER TO " + msg.getSender().getLocalName() + "] " + answers[answer_index] + "\n");
+				DebateParticipantAgent.this.log("[ANSWER TO " + msg.getSender().getLocalName() + "] " + answers[answer_index]);
 				
 			} else {
 				
@@ -204,6 +202,10 @@ public class DebateParticipantAgent extends Agent {
      */
 	private AID[] participantAgents;
 	
+	public DebateParticipantAgent(){
+		
+	}
+	
 	private void log(final String msg) {
 		String timeStamp = new SimpleDateFormat("HH:mm:ss.SSS").format(new Date());
         System.out.println(timeStamp + " [" + this.getAID().getLocalName() + "]: " + msg);
@@ -239,8 +241,8 @@ public class DebateParticipantAgent extends Agent {
              * 6- Register the service (through the agent description multiple
              * services can be registered in one shot).
              */
-            this.log("Registering '" + sd.getType() + "' service named '"
-                    + sd.getName() + "'" + "to the default DF...");
+//            this.log("Registering '" + sd.getType() + "' service named '"
+//                    + sd.getName() + "'" + "to the default DF...");
             DFService.register(this, dfd);
         } catch (final FIPAException fe) {
             fe.printStackTrace();
@@ -254,7 +256,7 @@ public class DebateParticipantAgent extends Agent {
 	@Override
     protected void takeDown() {
 		try {
-            this.log("De-registering myself from the default DF...");
+//            this.log("De-registering myself from the default DF...");
             DFService.deregister(this);
         } catch (final FIPAException fe) {
             fe.printStackTrace();

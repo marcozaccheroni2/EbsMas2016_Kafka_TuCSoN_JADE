@@ -2,6 +2,7 @@ package kafka4jade;
 
 import java.util.ArrayList;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -17,8 +18,6 @@ public class KafkaConsumerAssistant {
 	
 	private ConsumerRecords<String, String> result = null;
 	private long timeout;
-	private boolean consumer_is_alive = true;
-	private boolean can_consume = false;
 	
 	private PollThread pollThread = new PollThread();
 	
@@ -56,7 +55,7 @@ public class KafkaConsumerAssistant {
 			behav.block();
 			
 			this.timeout = timeout;
-			this.can_consume = true;
+			pollThread.can_consume.set(true);
 			
 			if (!pollThread.isAlive()) pollThread.start();
 			
@@ -69,18 +68,25 @@ public class KafkaConsumerAssistant {
 	}
 	
 	public void close(){
-		this.consumer_is_alive = false;
+		pollThread.consumer_is_alive.set(false);;
 	}
 	
 	private class PollThread extends Thread {
+		
+		private AtomicBoolean consumer_is_alive = new AtomicBoolean(true);
+		private AtomicBoolean can_consume = new AtomicBoolean(false);
+		
 		public void run() {
-			while (consumer_is_alive) {
-				if (can_consume) {
+			while (this.consumer_is_alive.get()) {
+				if (this.can_consume.get()) {
+					System.out.println("[Poll Request]");
 					result = consumer.poll(timeout);
+					System.out.println("[Result ready]");
+					this.can_consume.set(false);;
 					behav.restart();
-					can_consume = false;
 				}
 			}
+			System.out.println("[Closing consumer]");
 			consumer.close();
 		}
 	}

@@ -1,4 +1,4 @@
-package examples.playground;
+package examples.playground.backup;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -65,6 +65,8 @@ public class PlayerAgent extends Agent {
         	this.producer = new KafkaProducer<String, String>(producer_props);
 			
 			PlayerAgent.this.addBehaviour(new ObserveGameBehaviour());
+			PlayerAgent.this.log("TEAMMATES: [" + String.join(", ", PlayerAgent.this.teammates) + "]");
+			PlayerAgent.this.log("OPPONENTS: [" + String.join(", ", PlayerAgent.this.opponents) + "]");
 		}
 		
 		private void shoot() {
@@ -89,6 +91,8 @@ public class PlayerAgent extends Agent {
 			this.producer.send(record);
 			
 			String opponent = PlayerAgent.this.opponents.get(new Random().nextInt(PlayerAgent.this.opponents.size()));
+			
+			PlayerAgent.this.log("Rebound to " + opponent);
 			
 			ACLMessage ball = new ACLMessage(ACLMessage.PROPOSE);
 			ball.addReceiver(new AID(opponent, AID.ISGUID));
@@ -170,9 +174,12 @@ public class PlayerAgent extends Agent {
 						
 						ProducerRecord<String, String> record = new ProducerRecord<String, String>(PlayerAgent.this.playgroundTopic, msg2.toString());
 						this.producer.send(record);
+						PlayerAgent.this.log("Rebound taken");
 					} else if ("assist".equals(msg_content)) {
+						PlayerAgent.this.log("Assist received");
 						this.assist_received = true;
 					} else if ("pass".equals(msg_content)) {
+						PlayerAgent.this.log("Pass received");
 					}
 					
 					this.ball = true;
@@ -227,8 +234,6 @@ public class PlayerAgent extends Agent {
 					PlayerAgent.this.team = this.res.getTuple().getArg(0).toString();
 					PlayerAgent.this.log("I will play for " + PlayerAgent.this.team);
 					
-					PlayerAgent.this.gui.editPlayer(PlayerAgent.this.getAID().getLocalName(), PlayerAgent.this.team, "");
-					
 					LogicTuple player;
 					try {
 					
@@ -245,7 +250,7 @@ public class PlayerAgent extends Agent {
 						PlayerAgent.this.doDelete();
 					}
 					
-			        PlayerAgent.this.addBehaviour(new WaitToPlayBehaviour(PlayerAgent.this, 500));
+			        PlayerAgent.this.addBehaviour(new WaitToPlayBehaviour(PlayerAgent.this, 1000));
 					
 				} else {
 					PlayerAgent.this.log("Oh...ok, then I will just watch the game...");
@@ -392,6 +397,8 @@ public class PlayerAgent extends Agent {
                 		PlayerAgent.this.addBehaviour(new TryToGetTheBallBehaviour());
                 		this.stop();
                 		
+                	} else {
+                		PlayerAgent.this.log("Still waiting...");
                 	}
                 	PlayerAgent.this.bridge.clearTucsonOpResult(this);
                 } catch (final InvalidOperationException e) {
@@ -430,8 +437,10 @@ public class PlayerAgent extends Agent {
 								
 								if (PlayerAgent.this.teammates.contains(message.get("player").asText())) {
 									PlayerAgent.this.mood += 10;
+									PlayerAgent.this.log("Yeah! [mood +10]");
 								} else {
 									PlayerAgent.this.mood -= 10;
+									PlayerAgent.this.log("Damn! [mood -10]");
 								}
 								
 								break;
@@ -440,8 +449,10 @@ public class PlayerAgent extends Agent {
 								
 								if (PlayerAgent.this.teammates.contains(message.get("player").asText())) {
 									PlayerAgent.this.mood -= 5;
+									PlayerAgent.this.log("... [mood -5]");
 								} else {
 									PlayerAgent.this.mood += 5;
+									PlayerAgent.this.log("Com'on! [mood +5]");
 								}
 								
 								break;
@@ -450,6 +461,7 @@ public class PlayerAgent extends Agent {
 								
 								if (PlayerAgent.this.teammates.contains(message.get("player").asText())) {
 									PlayerAgent.this.mood += 2;
+									PlayerAgent.this.log("Good! [mood +2]");
 								}
 								
 								break;
@@ -458,6 +470,7 @@ public class PlayerAgent extends Agent {
 								
 								if (PlayerAgent.this.teammates.contains(message.get("player").asText())) {
 									PlayerAgent.this.mood += 2;
+									PlayerAgent.this.log("Wow! [mood +2]");
 								}
 								
 								break;
@@ -466,6 +479,7 @@ public class PlayerAgent extends Agent {
 								
 								if (PlayerAgent.this.teammates.contains(message.get("player").asText())) {
 									PlayerAgent.this.mood += 1;
+									PlayerAgent.this.log("Keep going! [mood +1]");
 								}
 								
 								break;
@@ -473,8 +487,8 @@ public class PlayerAgent extends Agent {
 							default:
 								break;
 							}
-							String mood = (PlayerAgent.this.mood > 0) ? " +" + PlayerAgent.this.mood : " " + PlayerAgent.this.mood;
-							PlayerAgent.this.gui.editPlayer(PlayerAgent.this.getAID().getLocalName(), PlayerAgent.this.team, mood);
+							
+							PlayerAgent.this.log("Current mood: " + PlayerAgent.this.mood);
 							
 						} catch (JsonProcessingException e) {
 							e.printStackTrace();
@@ -507,18 +521,18 @@ public class PlayerAgent extends Agent {
     private ArrayList<String> teammates = new ArrayList<String>();
     private ArrayList<String> opponents = new ArrayList<String>();
     
-    private PlaygroundGUI gui;
+    private DebugGUI debug;
     
     /* If the player takes part in the game, it will change depending of what happens */
     private int mood = 0;
     
-    public PlayerAgent(PlaygroundGUI gui) {
-		this.gui = gui;
+    public PlayerAgent(DebugGUI gui) {
+		this.debug = gui;
 	}
     
     private void log(final String msg) {
         System.err.println("[" + this.getLocalName() + "]: " + msg);
-        this.gui.playerLog(this.getLocalName(), msg);
+        this.debug.log(this.getLocalName(), msg);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package examples.playground;
+package examples.playground.backup;
 
 import jade.core.Profile;
 import jade.core.ProfileImpl;
@@ -24,25 +24,21 @@ public class Playground {
 		// Create the Main Container
 		AgentContainer mainContainer = rt.createMainContainer(profile);
 		
-		PlaygroundGUI playgroundGUI = new PlaygroundGUI();
-		playgroundGUI.setVisible(true);
+		DebugGUI debugGUI = new DebugGUI();
+		debugGUI.setVisible(true);
 		
 		try {
 			
-			wait(10);
-			
 			int players_per_team = 2;
 			
-			KeeperAgent keeper = new KeeperAgent(playgroundGUI, players_per_team);
+			KeeperAgent keeper = new KeeperAgent(debugGUI, players_per_team);
 			mainContainer.acceptNewAgent("keeper", keeper).start();
 			
 			wait(5);
 			
-			String[] names = {"michael", "larry", "magic", "shaq", "kobe", "lebron"};
-			
-			for (int i = 0; i < (players_per_team*2 + 1); i++) {
+			for (int i = 0; i < (players_per_team + 2); i++) {
 				wait(1);
-				mainContainer.acceptNewAgent(names[i], new PlayerAgent(playgroundGUI)).start();
+				mainContainer.acceptNewAgent("player_" + i, new PlayerAgent(debugGUI)).start();
 			}
 			
 		} catch(StaleProxyException e) {
